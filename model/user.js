@@ -9,5 +9,5 @@ const userSchema = new Schema({
   status: String,
 });
 
-const User = models.user || model('user', userSchema);
+const Users = models.user || model('user', userSchema);
 export default Users;
