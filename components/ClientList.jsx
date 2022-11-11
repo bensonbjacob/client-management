@@ -1,8 +1,18 @@
 import React from 'react';
 import { BiEdit, BiTrashAlt } from 'react-icons/bi';
-import data from '../database/data.json';
+import { getUsers } from '../lib/helper';
+import { useQuery } from 'react-query';
+import { useSelector, useDispatch } from 'react-redux';
+import { toggleChangeAction } from '../redux/reducer';
 
 const ClientList = () => {
+  const { isLoading, isError, data, error } = useQuery(
+    'users',
+    getUsers
+  );
+  if (isLoading) return <div>Client is Loading...</div>;
+  if (isError) return <div>Received Error {error}</div>;
+
   return (
     <table className='min-w-full table-auto'>
       <thead>
@@ -37,10 +47,21 @@ const ClientList = () => {
 };
 
 function Tr({ id, name, avatar, email, phone, date, status }) {
+  const visible = useSelector((state) => state.app.client.toggleForm);
+  const dispatch = useDispatch();
+
+  const onUpdate = () => {
+    dispatch(toggleChangeAction);
+  };
+
   return (
     <tr className='bg-gray-50 text-center'>
       <td className='px-16 py-2 flex flex-row items-center'>
-        <img src={avatar || '#'} alt='' />
+        <img
+          className='h-8 w-8 rounded-full object-cover'
+          src={avatar || '#'}
+          alt=''
+        />
         <span className='text-center ml-2 font-semibold'>
           {name || 'Unknown'}
         </span>
@@ -56,13 +77,17 @@ function Tr({ id, name, avatar, email, phone, date, status }) {
       </td>
       <td className='px-16 py-2'>
         <button className='cursor'>
-          <span className='bg-green-500 text=white px-5 py-1 rounded-full'>
+          <span
+            className={`${
+              status == 'Active' ? 'bg-green-500' : 'bg-rose-500'
+            } text=white px-5 py-1 rounded-full`}
+          >
             {status}
           </span>
         </button>
       </td>
       <td className='px-16 py-2 flex justify-around gap-5'>
-        <button className='cursor'>
+        <button className='cursor' onClick={onUpdate}>
           <BiEdit size={25} />
         </button>
         <button className='cursor'>

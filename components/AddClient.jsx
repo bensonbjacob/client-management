@@ -3,6 +3,8 @@ import { useReducer } from 'react';
 import { BiPlus } from 'react-icons/bi';
 import Success from './Success';
 import Error from './Error';
+import { useQueryClient, useMutation } from 'react-query';
+import { addUser, getUsers } from '../lib/helper';
 
 const formReducer = (state, event) => {
   return {
@@ -12,17 +14,40 @@ const formReducer = (state, event) => {
 };
 
 const AddClient = () => {
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useReducer(formReducer, {});
+  const addMutation = useMutation(addUser, {
+    onSuccess: () => {
+      queryClient.prefetchQuery('users', getUsers);
+    },
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (Object.keys(formData).length == 0)
       return console.log('Need form data.');
-    console.log(formData);
+    let { firstname, lastname, email, phone, date, status } =
+      formData;
+
+    const model = {
+      name: `${firstname} ${lastname}`,
+      avatar: `https://randomuser.me/api/portraits/men/${Math.floor(
+        Math.random() * 10
+      )}.jpg`,
+      email,
+      phone,
+      date,
+      status: status ?? 'Active',
+    };
+
+    addMutation.mutate(model);
   };
 
-  if (Object.keys(formData).length > 0)
-    return <Success message={'Client Added'} />;
+  if (addMutation.isLoading) return <div>Loading!</div>;
+  if (addMutation.isError)
+    return <Error message={addMutation.error.message}></Error>;
+  if (addMutation.isSuccess)
+    return <Success message={'Added Successfully'}></Success>;
 
   return (
     <form
