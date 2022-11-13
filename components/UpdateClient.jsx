@@ -3,16 +3,30 @@ import { useReducer } from 'react';
 import { BiBrush } from 'react-icons/bi';
 import Success from './Success';
 import Error from './Error';
+import { getUser, getUsers, updateUser } from '../lib/helper';
+import { useQueryClient, useQuery, useMutation } from 'react-query';
 
-const formReducer = (state, event) => {
-  return {
-    ...state,
-    [event.target.name]: event.target.value,
-  };
-};
+const UpdateClient = ({ formId, formData, setFormData }) => {
+  const queryClient = useQueryClient();
+  const { isLoading, isError, data, error } = useQuery(
+    ['users', formId],
+    () => getUser(formId)
+  );
+  const UpdateMutation = useMutation(
+    (newData) => updateUser(formId, newData),
+    {
+      onSuccess: async (data) => {
+        // queryClient.setQueryData('users', (old) => [data])
+        queryClient.prefetchQuery('users', getUsers);
+      },
+    }
+  );
 
-const UpdateClient = () => {
-  const [formData, setFormData] = useReducer(formReducer, {});
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error</div>;
+
+  const { name, avatar, phone, date, email, status } = data;
+  const [firstname, lastname] = name ? name.split(' ') : formData;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -20,9 +34,6 @@ const UpdateClient = () => {
       return console.log('Need form data.');
     console.log(formData);
   };
-
-  if (Object.keys(formData).length > 0)
-    return <Success message={'Client Added'} />;
 
   return (
     <form
@@ -34,6 +45,7 @@ const UpdateClient = () => {
           className='border w-full px-5 py-3 focus:outline-none rounded-md'
           type='text'
           onChange={setFormData}
+          defaultValue={firstname}
           name='firstname'
           placeholder='First Name'
         />
@@ -43,6 +55,7 @@ const UpdateClient = () => {
           className='border w-full px-5 py-3 focus:outline-none rounded-md'
           type='text'
           onChange={setFormData}
+          defaultValue={lastname}
           name='lastname'
           placeholder='Last Name'
         />
@@ -52,6 +65,7 @@ const UpdateClient = () => {
           className='border w-full px-5 py-3 focus:outline-none rounded-md'
           type='text'
           onChange={setFormData}
+          defaultValue={email}
           name='email'
           placeholder='Email'
         />
@@ -61,6 +75,7 @@ const UpdateClient = () => {
           className='border w-full px-5 py-3 focus:outline-none rounded-md'
           type='text'
           onChange={setFormData}
+          defaultValue={phone}
           name='phone'
           placeholder='Phone Number'
         />
@@ -70,6 +85,7 @@ const UpdateClient = () => {
           className='border px-5 py-3 focus:outline-none rounded-md'
           type='date'
           onChange={setFormData}
+          defaultValue={date}
           name='date'
         />
       </div>
@@ -77,6 +93,7 @@ const UpdateClient = () => {
         <div className='form-check'>
           <input
             type='radio'
+            defaultChecked={status == 'Active'}
             onChange={setFormData}
             value='Active'
             id='radioDefault1'
@@ -93,6 +110,7 @@ const UpdateClient = () => {
         <div className='form-check'>
           <input
             type='radio'
+            defaultChecked={status !== 'Active'}
             onChange={setFormData}
             value='Inactive'
             id='radioDefault2'

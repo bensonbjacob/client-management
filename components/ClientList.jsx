@@ -3,7 +3,7 @@ import { BiEdit, BiTrashAlt } from 'react-icons/bi';
 import { getUsers } from '../lib/helper';
 import { useQuery } from 'react-query';
 import { useSelector, useDispatch } from 'react-redux';
-import { toggleChangeAction } from '../redux/reducer';
+import { toggleChangeAction, updateAction } from '../redux/reducer';
 
 const ClientList = () => {
   const { isLoading, isError, data, error } = useQuery(
@@ -46,12 +46,15 @@ const ClientList = () => {
   );
 };
 
-function Tr({ id, name, avatar, email, phone, date, status }) {
+function Tr({ _id, name, avatar, email, phone, date, status }) {
   const visible = useSelector((state) => state.app.client.toggleForm);
   const dispatch = useDispatch();
 
   const onUpdate = () => {
-    dispatch(toggleChangeAction);
+    dispatch(toggleChangeAction(_id));
+    if (visible) {
+      dispatch(updateAction(_id));
+    }
   };
 
   return (
