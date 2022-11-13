@@ -16,7 +16,7 @@ const UpdateClient = ({ formId, formData, setFormData }) => {
     (newData) => updateUser(formId, newData),
     {
       onSuccess: async (data) => {
-        // queryClient.setQueryData('users', (old) => [data])
+        // queryClient.setQueryData('users', (old) => [data]);
         queryClient.prefetchQuery('users', getUsers);
       },
     }
@@ -28,11 +28,16 @@ const UpdateClient = ({ formId, formData, setFormData }) => {
   const { name, avatar, phone, date, email, status } = data;
   const [firstname, lastname] = name ? name.split(' ') : formData;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (Object.keys(formData).length == 0)
-      return console.log('Need form data.');
-    console.log(formData);
+    let userName = `${formData.firstname ?? firstname} ${
+      formData.lastname ?? lastname
+    }`;
+    let updated = Object.assign({}, data, formData, {
+      name: userName,
+    });
+    console.log(updated);
+    await UpdateMutation.mutate(updated);
   };
 
   return (
