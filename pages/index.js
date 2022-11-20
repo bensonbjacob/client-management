@@ -4,14 +4,31 @@ import ClientList from '../components/ClientList';
 import ClientForm from '../components/ClientForm';
 import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { toggleChangeAction } from '../redux/reducer';
+import { toggleChangeAction, deleteAction } from '../redux/reducer';
+import { deleteUser, getUsers } from '../lib/helper';
+import { useQueryClient } from 'react-query';
 
 export default function Home() {
   const visible = useSelector((state) => state.app.client.toggleForm);
+  const deleteId = useSelector((state) => state.app.client.deleteId);
+  const queryclient = useQueryClient();
   const dispatch = useDispatch();
 
   const handler = () => {
     dispatch(toggleChangeAction());
+  };
+
+  const deletehandler = async () => {
+    if (deleteId) {
+      await deleteUser(deleteId);
+      await queryclient.prefetchQuery('users', getUsers);
+      await dispatch(deleteAction(null));
+    }
+  };
+
+  const canclehandler = async () => {
+    console.log('cancel');
+    await dispatch(deleteAction(null));
   };
 
   return (
@@ -41,16 +58,42 @@ export default function Home() {
               </span>
             </button>
           </div>
+          {deleteId ? (
+            DeleteComponent({ deletehandler, canclehandler })
+          ) : (
+            <></>
+          )}
         </div>
-        {/*AddClient Form*/}
 
+        {/*AddClient Form*/}
         {visible ? <ClientForm /> : <></>}
 
-        {/*ClientList Table*/}
+        {/* Client List */}
+
         <div className='container mx-auto'>
           <ClientList />
         </div>
       </main>
+    </div>
+  );
+}
+
+function DeleteComponent({ deletehandler, canclehandler }) {
+  return (
+    <div className='flex gap-5'>
+      <button>Are you sure?</button>
+      <button
+        onClick={deletehandler}
+        className='flex bg-red-500 text-white px-4 py-2 border rounded-md hover:bg-rose-500 hover:border-red-500 hover:text-gray-50'
+      >
+        Yes{' '}
+      </button>
+      <button
+        onClick={canclehandler}
+        className='flex bg-green-500 text-white px-4 py-2 border rounded-md hover:bg-gree-500 hover:border-green-500 hover:text-gray-50'
+      >
+        No{' '}
+      </button>
     </div>
   );
 }
